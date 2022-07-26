@@ -192,6 +192,7 @@ class Driver():
         : (sun_positions, sun_velocities)
           a tuple containing a list of sun positions, a list of sun velocities
         """
+        raise NotImplementedError
 
     @property
     def target_name(self):
