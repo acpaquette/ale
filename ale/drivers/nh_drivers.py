@@ -188,3 +188,66 @@ class NewHorizonsLeisaIsisLabelNaifSpiceDriver(LineScanner, IsisLabel, NaifSpice
           Exposure duration in seconds
         """
         return self.label['IsisCube']['Instrument']['ExposureDuration']
+
+
+class NewHorizonsMvicTdiIsisLabelNaifSpiceDriver(LineScanner, IsisLabel, NaifSpice, NoDistortion, Driver):
+
+    @property
+    def instrument_id(self):
+        """
+        Returns an instrument id for uniquely identifying the instrument, but often
+        also used to be piped into Spice Kernels to acquire IKIDs. Therefore they
+        the same ID the Spice expects in bods2c calls.
+
+        Returns
+        -------
+        : str
+          instrument id
+        """
+        id_lookup = {
+            "MVIC_TDI" : "MVIC_TDI"
+        }
+        print(super().instrument_id)
+        return id_lookup[super().instrument_id]
+
+    @property
+    def ikid(self):
+        return self.label["IsisCube"]["Kernels"]["NaifFrameCode"].value
+
+    @property
+    def sensor_name(self):
+        """
+        Returns the name of the instrument
+
+        Returns
+        -------
+        : str
+          Name of the sensor
+        """
+        return self.label['IsisCube']['Instrument']['InstrumentId']
+
+    @property
+    def exposure_duration(self):
+        return (1.0 / self.label["IsisCube"]["Instrument"]["TdiRate"].value)
+
+    @property
+    def detector_center_sample(self):
+        return 0
+
+    @property
+    def detector_center_line(self):
+        return 0
+
+    @property
+    def naif_keywords(self):
+        return {**super().naif_keywords, **util.query_kernel_pool(f"*{-98900}*", 20)}
+
+    @property
+    def sensor_model_version(self):
+        """
+        Returns
+        -------
+        : int
+          ISIS sensor model version
+        """
+        return 1
