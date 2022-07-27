@@ -114,19 +114,20 @@ class FrameChain(nx.DiGraph):
 
         for s, d in time_dependent_frames:
             quats = np.zeros((len(times), 4))
-            avs = np.zeros((len(times), 3))
+            avs = []
             for j, time in enumerate(times):
                 try:
                     state_matrix = spice.sxform(spice.frmnam(s), spice.frmnam(d), time)
-                    rotation_matrix, avs[j] = spice.xf2rav(state_matrix)
+                    rotation_matrix, av = spice.xf2rav(state_matrix)
+                    avs.append(av)
                 except:
-                    state_matrix = spice.pxform(spice.frmnam(s), spice.frmnam(d), time)
-                    if avs:
-                        avs = None
+                    rotation_matrix = spice.pxform(spice.frmnam(s), spice.frmnam(d), time)
                 quat_from_rotation = spice.m2q(rotation_matrix)
                 quats[j,:3] = quat_from_rotation[1:]
                 quats[j,3] = quat_from_rotation[0]
 
+            if len(avs) == 0:
+                avs = None
             rotation = TimeDependentRotation(quats, times, s, d, av=avs)
             frame_chain.add_edge(rotation=rotation)
 

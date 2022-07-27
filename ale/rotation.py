@@ -182,10 +182,9 @@ class TimeDependentRotation:
         self.dest = dest
         self.quats = quats
         self.times = np.atleast_1d(times)
-        if av is not None:
+        self.av = av
+        if type(av) == list and len(av) > 0:
             self.av = np.asarray(av)
-        else:
-            self.av = av
 
     def __repr__(self):
         return f'Time Dependent Rotation Source: {self.source}, Destination: {self.dest}, Quats: {self.quats}, AV: {self.av}, Times: {self.times}'

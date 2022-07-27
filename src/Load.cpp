@@ -111,7 +111,7 @@ namespace ale {
     Py_INCREF(pIntIndent); // take ownership of reference
 
     PyObject *pBoolVerbose = Py_False;
-    if (!verbose) {
+    if (verbose) {
       pBoolVerbose = Py_True;
     }
     PyTuple_SetItem(pArgs, 4, pBoolVerbose);
@@ -150,7 +150,7 @@ namespace ale {
   }
 
   json load(std::string filename, std::string props, std::string formatter, bool verbose) {
-    std::string jsonstr = loads(filename, props, formatter, verbose);
+    std::string jsonstr = loads(filename, props, formatter, 2, verbose);
     return json::parse(jsonstr);
   }
 }
