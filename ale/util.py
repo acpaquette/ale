@@ -271,7 +271,7 @@ def get_kernels_from_isis_pvl(kernel_group, expand=True, format_as="list"):
             if not "DataDirectory" in isisprefs:
               warnings.warn("No IsisPreferences file found, is your ISISROOT env var set?")
 
-            kernels = [expandvars(expandvars(k, dict_to_lower(isisprefs['DataDirectory']))) for k in kernels]
+            kernels = [expandvars(expandvars(k, isisprefs['DataDirectory'], case_sensitive=False)) for k in kernels]
         return kernels
     elif (format_as == 'dict'):
         # return created dict
@@ -280,7 +280,7 @@ def get_kernels_from_isis_pvl(kernel_group, expand=True, format_as="list"):
             for kern_list in mk_paths:
                 for index, kern in enumerate(mk_paths[kern_list]):
                     if kern is not None:
-                        mk_paths[kern_list][index] = expandvars(expandvars(kern, dict_to_lower(isisprefs['DataDirectory'])))
+                        mk_paths[kern_list][index] = expandvars(expandvars(kern, isisprefs['DataDirectory'], case_sensitive=False))
         return mk_paths
     else:
         raise Exception(f'{format_as} is not a valid return format')
