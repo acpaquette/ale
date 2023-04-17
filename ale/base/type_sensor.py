@@ -386,6 +386,10 @@ class Cahvor():
         """
         raise NotImplementedError
 
+    @property
+    def final_inst_frame(self):
+      raise NotImplementedError
+
     def compute_h_c(self):
         """
         Computes the h_c element of a cahvor model for the conversion
@@ -466,13 +470,14 @@ class Cahvor():
           A networkx frame chain object
         """
         if not hasattr(self, '_frame_chain'):
-            self._frame_chain = FrameChain.from_spice(sensor_frame=self.spacecraft_id * 1000,
+            self._frame_chain = FrameChain.from_spice(sensor_frame=self.final_inst_frame,
                                                       target_frame=self.target_frame_id,
                                                       center_ephemeris_time=self.center_ephemeris_time,
                                                       ephemeris_times=self.ephemeris_time,
                                                       nadir=False, exact_ck_times=False)
-            cahvor_quats = Rotation.from_matrix(self.cahvor_rotation_matrix).as_quat()
-            cahvor_rotation = ConstantRotation(cahvor_quats, self.spacecraft_id * 1000, self.sensor_frame_id)
+            cahvor_quats = Rotation.from_matrix(self.cahvor_rotation_matrix)
+            quats = cahvor_quats.as_quat()
+            cahvor_rotation = ConstantRotation(quats, self.final_inst_frame, self.sensor_frame_id)
             self._frame_chain.add_edge(rotation = cahvor_rotation)
         return self._frame_chain
 

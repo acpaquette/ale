@@ -70,6 +70,10 @@ class MslMastcamPds3NaifSpiceDriver(Cahvor, Framer, Pds3Label, NaifSpice, Cahvor
         return self._cahvor_camera_params
 
     @property
+    def final_inst_frame(self):
+        return spice.bods2c("MSL_RSM_HEAD")
+
+    @property
     def sensor_frame_id(self):
         """
         Returns the Naif ID code for the site reference frame
@@ -87,6 +91,11 @@ class MslMastcamPds3NaifSpiceDriver(Cahvor, Framer, Pds3Label, NaifSpice, Cahvor
         return self._site_frame_id
 
     @property
+    def sensor_position(self):
+        position, velocity, time = super().sensor_position
+        return position + self.cahvor_camera_dict["C"], velocity, time
+
+    @property
     def focal2pixel_lines(self):
         """
         Expects pixel_size to be defined.
@@ -96,7 +105,7 @@ class MslMastcamPds3NaifSpiceDriver(Cahvor, Framer, Pds3Label, NaifSpice, Cahvor
         : list<double>
           focal plane to detector lines
         """
-        return [0, 1/self.pixel_size, 0]
+        return [0, 0, -1/self.pixel_size]
     
     @property
     def focal2pixel_samples(self):
@@ -108,23 +117,15 @@ class MslMastcamPds3NaifSpiceDriver(Cahvor, Framer, Pds3Label, NaifSpice, Cahvor
         : list<double>
           focal plane to detector samples
         """
-        return [0, 0, 1/self.pixel_size]
-
-    @property
-    def detector_center_line(self):
-        return self.label["INSTRUMENT_STATE_PARMS"]["DETECTOR_LINES"]/2
-
-    @property
-    def detector_center_sample(self):
-        return self.label["INSTRUMENT_STATE_PARMS"]["MSL:DETECTOR_SAMPLES"]/2
+        return [0, 1/self.pixel_size, 0]
 
     @property
     def detector_start_line(self):
-        return self.label["IMAGE_REQUEST_PARMS"]["FIRST_LINE"]
+        return 0
 
     @property
     def detector_start_sample(self):
-        return self.label["IMAGE_REQUEST_PARMS"]["FIRST_LINE_SAMPLE"]
+        return 0
 
     @property
     def sensor_model_version(self):
