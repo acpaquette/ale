@@ -135,7 +135,8 @@ class DawnFcPds3NaifSpiceDriver(Framer, Pds3Label, NaifSpice, Driver):
         """
         # Microns to mm
         pixel_size = spice.gdpool('INS{}_PIXEL_SIZE'.format(self.ikid), 0, 1)[0] * 0.001
-        return [0.0, 1/pixel_size, 0.0]
+        # return [0.0, 1/pixel_size, 0.0]
+        return [0.0, 1/0.0140088, 0.0]
 
     @property
     def focal2pixel_lines(self):
@@ -150,7 +151,8 @@ class DawnFcPds3NaifSpiceDriver(Framer, Pds3Label, NaifSpice, Driver):
         """
         # Microns to mm
         pixel_size = spice.gdpool('INS{}_PIXEL_SIZE'.format(self.ikid), 0, 1)[0] * 0.001
-        return [0.0, 0.0, 1/pixel_size]
+        # return [0.0, 0.0, 1/pixel_size]
+        return [0.0, 0.0, 1/0.014]
 
     @property
     def sensor_model_version(self):
