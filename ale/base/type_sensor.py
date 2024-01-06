@@ -405,33 +405,26 @@ class Cahvor():
           a tuple containing a list of positions, a list of velocities, and a
           list of times.
         """
-        
         # Rover position in ECEF
         positions, velocities, times = super().sensor_position
         
-        nadir = self._props.get("nadir", False)
-        if nadir:
-          # For nadir applying the rover-to-camera offset runs into 
-          # problems, so return early. TBD 
-          return positions, velocities, times
-
-        # Rover-to-camera offset in rover frame
-        cam_ctr = self.cahvor_center
-        
-        # Rover-to-camera offset in ECEF
-        ecef_frame  = self.target_frame_id        
-        rover_frame = self.final_inst_frame
-        frame_chain = self.frame_chain
-        rover2ecef_rotation = \
-          frame_chain.compute_rotation(rover_frame, ecef_frame)
-        cam_ctr = rover2ecef_rotation.apply_at([cam_ctr], times)[0]
-
-        # Go from rover position to camera position
-        positions[0] += cam_ctr
-
         if self._props.get("landed", False):
           positions = np.array([[0, 0, 0]] * len(times))
           velocities = np.array([[0, 0, 0]] * len(times))
+        else:
+          # Rover-to-camera offset in rover frame
+          cam_ctr = self.cahvor_center
+          
+          # Rover-to-camera offset in ECEF
+          ecef_frame  = self.target_frame_id        
+          rover_frame = self.final_inst_frame
+          frame_chain = self.frame_chain
+          rover2ecef_rotation = \
+            frame_chain.compute_rotation(rover_frame, ecef_frame)
+          cam_ctr = rover2ecef_rotation.apply_at([cam_ctr], times)[0]
+
+          # Go from rover position to camera position
+          positions[0] += cam_ctr
         
         return positions, velocities, times
 
@@ -500,10 +493,7 @@ class Cahvor():
             v_s = self.compute_v_s()
             H_prime = (self.cahvor_camera_dict['H'] - h_c * self.cahvor_camera_dict['A'])/h_s
             V_prime = (self.cahvor_camera_dict['V'] - v_c * self.cahvor_camera_dict['A'])/v_s
-            if self._props.get("landed", False):
-              self._cahvor_rotation_matrix = np.array([-H_prime, -V_prime, self.cahvor_camera_dict['A']])
-            else:
-              self._cahvor_rotation_matrix = np.array([H_prime, V_prime, self.cahvor_camera_dict['A']])
+            self._cahvor_rotation_matrix = np.array([H_prime, V_prime, self.cahvor_camera_dict['A']])
         return self._cahvor_rotation_matrix
 
     @property
@@ -537,31 +527,6 @@ class Cahvor():
                                                       ephemeris_times=self.ephemeris_time,
                                                       nadir=nadir, exact_ck_times=False)
             cahvor_quats = Rotation.from_matrix(self.cahvor_rotation_matrix).as_quat()
-            
-            if nadir:
-                # Logic for nadir calculation was taken from ISIS3
-                #  SpiceRotation::setEphemerisTimeNadir
-                rotation = self._frame_chain.compute_rotation(self.target_frame_id, 1)
-                p_vec, v_vec, times = self.sensor_position
-                rotated_positions = rotation.apply_at(p_vec, times)
-                rotated_velocities = rotation.rotate_velocity_at(p_vec, v_vec, times)
-
-                p_vec = rotated_positions
-                v_vec = rotated_velocities
-
-                velocity_axis = 2
-                # Get the default line translation with no potential flipping
-                # from the driver
-                trans_x = np.array(self.focal2pixel_lines)
-
-                if (trans_x[0] < trans_x[1]):
-                    velocity_axis = 1
-
-                quats = [spice.m2q(spice.twovec(-p_vec[i], 3, v_vec[i], velocity_axis)) for i, time in enumerate(times)]
-                quats = np.array(quats)[:,[1,2,3,0]]
-
-                rotation = TimeDependentRotation(quats, times, 1, self.final_inst_frame)
-                self._frame_chain.add_edge(rotation)
 
             # If we are landed we only care about the final cahvor frame relative to the target
             if self._props.get("landed", False):
